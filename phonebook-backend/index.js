@@ -1,5 +1,9 @@
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
+
+
+app.use(bodyParser.json())
 
 
 let persons = [  
@@ -32,6 +36,7 @@ app.get('/api/persons', (req, res) => {
 })
 
 
+
 app.get('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   const person = persons.find(person => person.id === id)
@@ -44,6 +49,7 @@ app.get('/api/persons/:id', (request, response) => {
 })
 
 
+
 app.delete('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   persons = persons.filter(person => person.id !== id)
@@ -52,12 +58,44 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 
+
+const generateId = () => {
+  let maxId = persons.length > 0
+    ? Math.max(...persons.map(p => p.id))
+    : 0
+  maxId++
+  return Math.floor(Math.random() * (9999999 - maxId + 1)) + maxId;
+}
+
+app.post('/api/persons', (request, response) => {
+  const body = request.body
+
+  if (!body.name) {
+    return response.status(400).json({ 
+      error: 'content missing' 
+    })
+  }
+
+  const person = {
+    name: body.name,
+    number: body.number,
+    id: generateId(),
+  }
+
+  persons = persons.concat(person)
+
+  response.json(person)
+})
+
+
+
 app.get('/info', (req, res) => {
   res.end(
     `Phonebook has info for ${persons.length} people\n` + 
     new Date()
   )
 })
+
 
 
 const PORT = 3001
