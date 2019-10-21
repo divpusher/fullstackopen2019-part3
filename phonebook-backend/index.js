@@ -59,7 +59,7 @@ app.delete('/api/persons/:id', (request, response) => {
 
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (body.name === undefined || body.number == undefined) {
@@ -71,9 +71,11 @@ app.post('/api/persons', (request, response) => {
     number: body.number
   })
 
-  newPerson.save().then(savedPerson => {
-    response.json(savedPerson.toJSON())
-  })
+  newPerson.save()
+    .then(savedPerson => {
+      response.json(savedPerson.toJSON())
+    }) 
+    .catch(error => next(error))
 })
 
 
@@ -110,6 +112,10 @@ const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'malformatted id' })
   } 
+
+  if (error.name == 'MongoError' && error.code == 11000){
+    return response.status(400).send({ error: 'name must be unique' })
+  }
 
   next(error)
 }
